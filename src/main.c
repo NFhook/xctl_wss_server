@@ -1,7 +1,14 @@
 #include <libwebsockets.h>
 #include "server.h"
 
+static int interrupted = 0;
+
+static void sigint_handler(int sig) {
+    interrupted = 1;
+}
+
 int main(int argc, char **argv) {
+
     struct lws_context_creation_info info;
     struct lws_context *context;
 
@@ -27,8 +34,18 @@ int main(int argc, char **argv) {
 
     lwsl_notice("WebSocket server started on port 8080\n");
 
-    while (lws_service(context, 1000) >= 0);
+    signal(SIGINT, sigint_handler);
+    
+    lwsl_user("Starting server on port: %d\n", info.port);
+    
+    
+    //while (lws_service(context, 1000) >= 0);
+    while(!interrupted) {
+	lws_service(context, 1000);
+    }
 
     lws_context_destroy(context);
+    
+    lwsl_user("Server stoped!\n");
     return 0;
 }
