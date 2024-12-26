@@ -9,7 +9,7 @@ int callback_keepalive(struct lws *wsi, enum lws_callback_reasons reason,
                        void *user, void *in, size_t len) {
     switch (reason) {
         case LWS_CALLBACK_RECEIVE: {
-            // 收到客户端消息
+            // receive
             const char *recv_msg = (const char *)in;
             yyjson_doc *doc = yyjson_read(recv_msg, len, 0);
             if (!doc) {
@@ -20,14 +20,14 @@ int callback_keepalive(struct lws *wsi, enum lws_callback_reasons reason,
             yyjson_val *root = yyjson_doc_get_root(doc);
             yyjson_val *type = yyjson_obj_get(root, "type");
             if (type && strcmp(yyjson_get_str(type), "keepalive") == 0) {
-                // 创建响应消息
+                // create response
                 yyjson_mut_doc *reply_doc = yyjson_mut_doc_new(NULL);
                 yyjson_mut_val *reply_root = yyjson_mut_obj(reply_doc);
                 yyjson_mut_doc_set_root(reply_doc, reply_root);
                 yyjson_mut_obj_add_str(reply_doc, reply_root, "type", "ack");
                 yyjson_mut_obj_add_uint(reply_doc, reply_root, "timestamp", time(NULL));
 
-                // 序列化JSON
+                // JSON
                 char *reply_msg = yyjson_mut_write(reply_doc, 0, NULL);
                 if (reply_msg) {
                     unsigned char buffer[LWS_PRE + 1024];
@@ -48,19 +48,19 @@ int callback_keepalive(struct lws *wsi, enum lws_callback_reasons reason,
         }
 
         case LWS_CALLBACK_ESTABLISHED: {
-            // 客户端连接建立
+            // client estalibsh
             lwsl_user("Connection established\n");
             break;
         }
 
         case LWS_CALLBACK_CLOSED: {
-            // 客户端连接关闭
+            // client close 
             lwsl_user("Connection closed\n");
             break;
         }
 
         case LWS_CALLBACK_TIMER: {
-            // 定时器触发
+            // timer
             lws_callback_on_writable(wsi);
             lws_set_timer_usecs(wsi, KEEPALIVE_INTERVAL_SEC * LWS_USEC_PER_SEC);
             break;
